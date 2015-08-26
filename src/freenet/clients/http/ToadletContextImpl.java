@@ -200,7 +200,11 @@ public class ToadletContextImpl implements ToadletContext {
 	@Override
 	public void sendReplyHeadersFProxy(int replyCode, String replyDescription, MultiValueTable<String,String> mvt, String mimeType, long contentLength) throws ToadletContextClosedException, IOException {
 	    boolean enableJavascript = false;
-	    if(container.isFProxyWebPushingEnabled() && container.isFProxyJavascriptEnabled())
+	    boolean scriptsAllowed = false;
+            if (container instanceof ToadletContainerScriptsAllowed){
+                scriptsAllowed = ((ToadletContainerScriptsAllowed) container).isFProxyScriptsAllowed();
+            }
+	    if((scriptsAllowed || container.isFProxyWebPushingEnabled()) && container.isFProxyJavascriptEnabled())
 	        enableJavascript = true;
 	    sendReplyHeaders(replyCode, replyDescription, mvt, mimeType, contentLength, null, false, true, enableJavascript);
 	}

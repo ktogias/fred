@@ -60,7 +60,7 @@ import freenet.support.io.NativeThread;
  * 
  * Provide a HTTP server for FProxy
  */
-public final class SimpleToadletServer implements ToadletContainer, Runnable, LinkFilterExceptionProvider {
+public final class SimpleToadletServer implements ToadletContainerScriptsAllowed, Runnable, LinkFilterExceptionProvider {
 	/** List of urlPrefix / Toadlet */ 
 	private final LinkedList<ToadletElement> toadlets;
 	private static class ToadletElement {
@@ -131,6 +131,19 @@ public final class SimpleToadletServer implements ToadletContainer, Runnable, Li
 	public IntervalPusherManager intervalPushManager;
 
         private static volatile boolean logMINOR;
+
+	/**
+ 	 * By default the data will be filtered (identical behaviour with official fred)
+ 	 * Filtering can be truned off setting fproxy.filterData=false in freenet.ini 
+ 	 */
+	private static boolean filterData = true;
+
+	/**
+ 	 * By default scriptsAllowed is set to false (identical behaviour with official fred)
+ 	 * Scripts can be allowed by setting fproxy.scriptsAllowed=true in freenet.ini
+ 	 */
+	private static boolean scriptsAllowed = false;
+
 	static {
 		Logger.registerLogThresholdCallback(new LogThresholdCallback(){
 			@Override
@@ -414,6 +427,48 @@ public final class SimpleToadletServer implements ToadletContainer, Runnable, Li
 		}
 		
 	};
+
+	static class FilterDataCallback extends BooleanCallback {
+
+		@Override
+		public Boolean get() {
+			return filterData;
+		}
+
+		@Override
+		public void set(Boolean val) throws InvalidConfigValueException {
+			if (get().equals(val))
+				return;
+			filterData = val;
+			throw new InvalidConfigValueException("Cannot change filterData on the fly, please restart freenet");
+		}
+
+		@Override
+		public boolean isReadOnly() {
+			return true;
+		}
+	}
+        
+        static class ScriptsAllowedCallback extends BooleanCallback {
+
+		@Override
+		public Boolean get() {
+			return scriptsAllowed;
+		}
+
+		@Override
+		public void set(Boolean val) throws InvalidConfigValueException {
+			if (get().equals(val))
+				return;
+			scriptsAllowed = val;
+			throw new InvalidConfigValueException("Cannot change scriptsAllowed on the fly, please restart freenet");
+		}
+
+		@Override
+		public boolean isReadOnly() {
+			return true;
+		}
+	}
 
 	public void createFproxy() {
 		NodeClientCore core = this.core;
@@ -747,6 +802,11 @@ public final class SimpleToadletServer implements ToadletContainer, Runnable, Li
 				configItemOrder++, true, false, "SimpleToadletServer.refilterPolicy", "SimpleToadletServer.refilterPolicyLong", new ReFilterCallback());
 		
 		this.refilterPolicy = REFILTER_POLICY.valueOf(fproxyConfig.getString("refilterPolicy"));
+
+		fproxyConfig.register("filterData", true, configItemOrder++, true, false, "fproxy.filterData", "fproxy.filterDataLong", new FilterDataCallback());
+                filterData = fproxyConfig.getBoolean("filterData");
+                fproxyConfig.register("scriptsAllowed", false, configItemOrder++, true, false, "fproxy.scriptsAllowed", "fproxy.scriptsAllowedLong", new ScriptsAllowedCallback());
+                scriptsAllowed = fproxyConfig.getBoolean("scriptsAllowed");	
 		
 		// Network seclevel not physical seclevel because bad filtering can cause network level anonymity breaches.
 		SimpleToadletServer.isPanicButtonToBeShown = fproxyConfig.getBoolean("showPanicButton");
@@ -1098,6 +1158,11 @@ public final class SimpleToadletServer implements ToadletContainer, Runnable, Li
 	public synchronized void enableFProxyWebPushing(boolean b){
 		fProxyWebPushingEnabled = b;
 	}
+
+	@Override
+        public synchronized boolean isFProxyScriptsAllowed() {
+            return scriptsAllowed;
+        }
 
 	@Override
 	public String getFormPassword() {

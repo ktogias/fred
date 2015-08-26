@@ -113,6 +113,16 @@ public final class FProxyToadlet extends Toadlet implements RequestClient {
 	// FIXME make this configurable (or get rid of prefetch support)
 	static final int MAX_PREFETCH = 50;
 
+	/**
+ 	 * By default filter data
+ 	 */ 
+	static boolean filterData = true;
+        
+	/**
+ 	 * By default disable javascript 
+ 	 */ 
+        static boolean javascriptEnabled = false;
+
 	public FProxyToadlet(final HighLevelSimpleClient client, NodeClientCore core, FProxyFetchTracker tracker) {
 		super(client);
 		client.setMaxLength(MAX_LENGTH_NO_PROGRESS);
@@ -616,8 +626,8 @@ public final class FProxyToadlet extends Toadlet implements RequestClient {
 			fctx.maxNonSplitfileRetries = maxRetries;
 			fctx.maxSplitfileBlockRetries = maxRetries;
 		}
-		if (!force && !httprequest.isParameterSet("forcedownload")) fctx.filterData = true;
-		else if(logMINOR) Logger.minor(this, "Content filter disabled via request parameter");
+		if (filterData && !force && !httprequest.isParameterSet("forcedownload")) fctx.filterData = true;
+		else if(logMINOR) Logger.minor(this, "Content filter disabled via config or request parameter");
 		//Load the fetch context with the callbacks needed for web-pushing, if enabled
 		if(container.enableInlinePrefetch()) {
 			fctx.prefetchHook = new FoundURICallback() {
@@ -1107,6 +1117,10 @@ public final class FProxyToadlet extends Toadlet implements RequestClient {
 
 	public static void maybeCreateFProxyEtc(NodeClientCore core, Node node, Config config,
 	        SimpleToadletServer server) throws IOException {
+
+		SubConfig fcpConfig = config.get("fproxy");
+                filterData = fcpConfig.getBoolean("filterData");
+                javascriptEnabled = fcpConfig.getBoolean("javascriptEnabled");
 
 		// FIXME how to change these on the fly when the interface language is changed?
 

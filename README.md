@@ -1,3 +1,28 @@
+## EXPERIMENTAL UNOFFICIAL FORK - USE WITH YOUR OWN RISK - YOU WERE WARNED!
+
+This Freenet fred fork adds 2 config options in freenet.ini that allows 
+globally disabling content filtering and enabling external javascript execution.
+
+Using these options makes you vunerable to XSS attacs and can break your anonymity.
+
+## DO NOT USE THIS FORK AND DO NOT DISABLE CONTENT FILTERING OR ENABLE JAVASCRIPT EXECUTION IF YOU ARE USING FREENET FOR ANONYMITY
+
+## ABOUT THIS FORK
+Two options are available for adding into freenet.ini
+
+* fproxy.filterData : The default is true and results in identical behaviour with 
+official fred. If set to false data filtering is globally disabled allowing directly 
+loading any type of file into your browser. BE WARNED!: Malicious files can be 
+allowed to load in your browser through freenet if fproxy.filterData is set to 
+false.
+
+* fproxy.scriptsAllowed : The default is false and results in identical behaviour with 
+official fred. If set to true same-origin header is sent to browser allowing the
+execution of external javascripts. BE WARNED!: Setting fproxy.scriptsAllowed to
+true makes you vunerable to XSS attacs and thus can break your anonymity and 
+security.
+
+
 ## QUICK START
 
 If the installer did not do it for you, start Freenet and open a browser pointing
